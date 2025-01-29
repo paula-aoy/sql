@@ -14,9 +14,9 @@
     * Open a private window in your browser. Copy and paste the link to your pull request into the address bar. Make sure you can see your pull request properly. This helps the technical facilitator and learning support staff review your submission easily.
 
 Checklist:
-- [ ] Create a branch called `assignment-one`.
-- [ ] Ensure that the repository is public.
-- [ ] Review [the PR description guidelines](https://github.com/UofT-DSI/onboarding/blob/main/onboarding_documents/submissions.md#guidelines-for-pull-request-descriptions) and adhere to them.
+- [x] Create a branch called `assignment-one`.
+- [x] Ensure that the repository is public.
+- [x] Review [the PR description guidelines](https://github.com/UofT-DSI/onboarding/blob/main/onboarding_documents/submissions.md#guidelines-for-pull-request-descriptions) and adhere to them.
 - [ ] Verify that the link is accessible in a private browser window.
 
 If you encounter any difficulties or have questions, please don't hesitate to reach out to our team via our Slack. Our Technical Facilitators and Learning Support staff are here to help you navigate any challenges.
@@ -121,12 +121,17 @@ Steps to complete this part of the assignment:
 
 #### SELECT
 1. Write a query that returns everything in the customer table.
+
 2. Write a query that displays all of the columns and 10 rows from the customer table, sorted by customer_last_name, then customer_first_ name.
 
 <div align="center">-</div>
 
 #### WHERE
 1. Write a query that returns all customer purchases of product IDs 4 and 9.
+SELECT *
+FROM customer_purchases
+WHERE product_id IN (4, 9)
+
 2. Write a query that returns all customer purchases and a new calculated column 'price' (quantity * cost_to_customer_per_qty), filtered by vendor IDs between 8 and 10 (inclusive) using either:
 	1.  two conditions using AND
 	2.  one condition using BETWEEN
@@ -206,4 +211,17 @@ Consider, for example, concepts of fariness, inequality, social structures, marg
 
 ```
 Your thoughts...
+
+The Wired article was very interesting and made me think of an example related to a Brazilian ID database as it is closely tied to my identity as a Brazilian-Japanese woman. 
+
+In Brazil, one of the main ID databases used to be the RG (acronym for “Registro Geral”, loosely translated as General Registry), it had basic fields such as name and last name, date of birth and fingerprint. The last one is interesting because this database was actually managed by state police and its initial purpose was to combat crime by identifying criminals, hence the need for fingerprinting. 
+
+The RG database design and data steward model, coupled with the widespread use made marginalized groups vulnerable to unwarranted security background checks, for example, in mundane situations such as when they were coming into a building to visit a doctor, they had to register with their RG to have access, or when applying for a job. Therefore, their names and date of birth were also tied to their criminal record in that police database.
+
+There was also a secondary issue with the RG databases. And yes, emphasis on databases plural. Since the database was created and managed by state police, Brazil has 27 states, which means 27 separate databases that do not have any relationship between them. You might have guessed where this is going: criminals then created multiple RG’s one in every new state they decided to commit crimes on. The lack of integration made the whole purpose of RG unattainable: criminals were getting away with crimes.
+
+Currently, the individual state RG databases still exist, but are being substituted by CPF, where each citizen now has a single unique identifier. It is valid across the nation and has no ties to police criminal records, as their goal is to provide an ID for citizens to access public services such as healthcare, but also for private services such as financial systems to rely on.
+
+I hope this was an interesting tale!
+
 ```
