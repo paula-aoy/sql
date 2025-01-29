@@ -136,6 +136,19 @@ of customers for them to give stickers to, sorted by last name, then first name.
 
 HINT: This query requires you to join two tables, use an aggregate function, and use the HAVING keyword. */
 
+--SELECT (First attempt, see new attempt below)
+--cp.customer_id,
+-- c.customer_last_name,
+-- c.customer_first_name,
+-- ROUND(SUM(quantity*cost_to_customer_per_qty), 2) AS total_spent
+-- FROM customer_purchases AS cp
+-- INNER JOIN customer AS c
+-- ON cp.customer_id = c.customer_id
+-- GROUP BY cp.customer_id, c.customer_last_name, c.customer_first_name
+-- HAVING total_spent > 2000
+-- ORDER BY total_spent ASC
+
+--Below is my new attempt, I had gotten the sorting order wrong, now it is sorting by last name, then first name
 SELECT
 cp.customer_id,
 c.customer_last_name,
@@ -144,9 +157,10 @@ ROUND(SUM(quantity*cost_to_customer_per_qty), 2) AS total_spent
 FROM customer_purchases AS cp
 INNER JOIN customer AS c
 ON cp.customer_id = c.customer_id
-GROUP BY cp.customer_id, c.customer_last_name, c.customer_first_name
+GROUP BY  c.customer_last_name, c.customer_first_name
 HAVING total_spent > 2000
-ORDER BY total_spent ASC
+ORDER BY c.customer_last_name, c.customer_first_name ASC
+
 
 
 --Temp Table
