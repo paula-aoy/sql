@@ -103,30 +103,53 @@ You can either display all rows in the customer_purchases table, with the counte
 
 **HINT**: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK().
 
+# ROW_NUMBER
 SELECT 
 customer_id, 
 market_date, 
-ROW_NUMBER() OVER (
-PARTITION BY customer_id 
-ORDER BY market_date
-    ) AS multiple_visit_number
+ROW_NUMBER() OVER (PARTITION BY customer_id 
+ORDER BY market_date DESC) 
+AS multiple_visit_number
 FROM customer_purchases;
+
+# DENSE_RANK
+SELECT 
+customer_id, 
+market_date, 
+DENSE_RANK() OVER (PARTITION BY customer_id 
+ORDER BY market_date) AS visit_number
+FROM (SELECT DISTINCT customer_id, market_date 
+ROM customer_purchases
+) unique_visits;
 
 
 2. Reverse the numbering of the query from a part so each customer’s most recent visit is labeled 1, then write another query that uses this one as a subquery (or temp table) and filters the results to only the customer’s most recent visit.
 
+WITH RankedVisits AS (
 SELECT 
-    customer_id, 
-    market_date, 
-    ROW_NUMBER() OVER (
-        PARTITION BY customer_id 
-        ORDER BY market_date DESC
-    ) AS visit_number
-FROM customer_purchases;
-
+customer_id, 
+market_date, 
+ROW_NUMBER() OVER (PARTITION BY customer_id 
+ORDER BY market_date DESC) 
+AS visit_number
+FROM customer_purchases
+)
+SELECT * FROM RankedVisits;
 
 
 3. Using a COUNT() window function, include a value along with each row of the customer_purchases table that indicates how many different times that customer has purchased that product_id.
+
+SELECT 
+customer_id, 
+product_id, 
+market_date, 
+quantity*cost_to_customer_per_qty, 
+COUNT(*) 
+OVER (
+PARTITION BY customer_id, product_id
+    ) 
+AS total_purchases_per_customer
+FROM customer_purchases;
 
 <div align="center">-</div>
 
@@ -154,7 +177,31 @@ FROM product;
 #### UNION
 1. Using a UNION, write a query that displays the market dates with the highest and lowest total sales.
 
-**HINT**: There are a possibly a few ways to do this query, but if you're struggling, try the following: 1) Create a CTE/Temp Table to find sales values grouped dates; 2) Create another CTE/Temp table with a rank windowed function on the previous query to create "best day" and "worst day"; 3) Query the second temp table twice, once for the best day, once for the worst day, with a UNION binding them. 
+**HINT**: There are a possibly a few ways to do this query, but if you're struggling, try the following: 1) Create a CTE/Temp Table to find sales values grouped dates; 2) Create another CTE/Temp table with a rank windowed function on the previous query to create "best day" and "worst day"; 3) Query the second temp table twice, once for the best day, once for the worst day, with a UNION binding them.
+
+WITH sales_per_date AS (
+SELECT 
+market_date, 
+SUM(quantity*cost_to_customer_per_qty) AS total_sales
+FROM customer_purchases
+GROUP BY market_date
+),
+RankedSales AS (
+SELECT 
+market_date, 
+total_sales,
+RANK() OVER (ORDER BY total_sales DESC) AS best_day_rank,
+RANK() OVER (ORDER BY total_sales ASC) AS worst_day_rank
+FROM sales_per_date
+),
+SELECT market_date, total_sales, 'Highest Sales Day' AS category
+FROM RankedSales
+WHERE best_day_rank = 1
+UNION
+SELECT market_date, total_sales, 'Lowest Sales Day' AS category
+FROM RankedSales
+WHERE worst_day_rank = 1;
+
 
 ***
 
