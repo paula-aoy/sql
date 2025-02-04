@@ -86,6 +86,14 @@ Find the NULLs and then using COALESCE, replace the NULL with a blank for the fi
 
 **HINT**: keep the syntax the same, but edited the correct components with the string. The `||` values concatenate the columns into strings. Edit the appropriate columns -- you're making two edits -- and the NULL rows will be fixed. All the other rows will remain the same.
 
+SELECT 
+product_name || ', ' || 
+COALESCE(product_size, '') || ' (' || 
+COALESCE(product_qty_type, 'unit') || ')'
+AS product_list_fixed
+FROM product;
+
+
 <div align="center">-</div>
 
 #### Windowed Functions
@@ -95,9 +103,53 @@ You can either display all rows in the customer_purchases table, with the counte
 
 **HINT**: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK().
 
+# ROW_NUMBER
+SELECT 
+customer_id, 
+market_date, 
+ROW_NUMBER() OVER (PARTITION BY customer_id 
+ORDER BY market_date DESC) 
+AS multiple_visit_number
+FROM customer_purchases;
+
+# DENSE_RANK
+SELECT 
+customer_id, 
+market_date, 
+DENSE_RANK() OVER (PARTITION BY customer_id 
+ORDER BY market_date) AS visit_number
+FROM (SELECT DISTINCT customer_id, market_date 
+ROM customer_purchases
+) unique_visits;
+
+
 2. Reverse the numbering of the query from a part so each customer’s most recent visit is labeled 1, then write another query that uses this one as a subquery (or temp table) and filters the results to only the customer’s most recent visit.
 
+WITH RankedVisits AS (
+SELECT 
+customer_id, 
+market_date, 
+ROW_NUMBER() OVER (PARTITION BY customer_id 
+ORDER BY market_date DESC) 
+AS visit_number
+FROM customer_purchases
+)
+SELECT * FROM RankedVisits;
+
+
 3. Using a COUNT() window function, include a value along with each row of the customer_purchases table that indicates how many different times that customer has purchased that product_id.
+
+SELECT 
+customer_id, 
+product_id, 
+market_date, 
+quantity*cost_to_customer_per_qty, 
+COUNT(*) 
+OVER (
+PARTITION BY customer_id, product_id
+    ) 
+AS total_purchases_per_customer
+FROM customer_purchases;
 
 <div align="center">-</div>
 
@@ -110,12 +162,46 @@ You can either display all rows in the customer_purchases table, with the counte
 
 **HINT**: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR will help split the column. 
 
+SELECT 
+product_name,
+CASE 
+WHEN INSTR(product_name, '-') > 0 
+THEN TRIM(SUBSTR(product_name, INSTR(product_name, '-') + 1))
+ELSE NULL
+END AS description_fixed
+FROM product;
+
+
 <div align="center">-</div>
 
 #### UNION
 1. Using a UNION, write a query that displays the market dates with the highest and lowest total sales.
 
-**HINT**: There are a possibly a few ways to do this query, but if you're struggling, try the following: 1) Create a CTE/Temp Table to find sales values grouped dates; 2) Create another CTE/Temp table with a rank windowed function on the previous query to create "best day" and "worst day"; 3) Query the second temp table twice, once for the best day, once for the worst day, with a UNION binding them. 
+**HINT**: There are a possibly a few ways to do this query, but if you're struggling, try the following: 1) Create a CTE/Temp Table to find sales values grouped dates; 2) Create another CTE/Temp table with a rank windowed function on the previous query to create "best day" and "worst day"; 3) Query the second temp table twice, once for the best day, once for the worst day, with a UNION binding them.
+
+WITH sales_per_date AS (
+SELECT 
+market_date, 
+SUM(quantity*cost_to_customer_per_qty) AS total_sales
+FROM customer_purchases
+GROUP BY market_date
+),
+RankedSales AS (
+SELECT 
+market_date, 
+total_sales,
+RANK() OVER (ORDER BY total_sales DESC) AS best_day_rank,
+RANK() OVER (ORDER BY total_sales ASC) AS worst_day_rank
+FROM sales_per_date
+),
+SELECT market_date, total_sales, 'Highest Sales Day' AS category
+FROM RankedSales
+WHERE best_day_rank = 1
+UNION
+SELECT market_date, total_sales, 'Lowest Sales Day' AS category
+FROM RankedSales
+WHERE worst_day_rank = 1;
+
 
 ***
 
@@ -183,4 +269,6 @@ Consider, for example, concepts of labour, bias, LLM proliferation, moderating c
 
 ```
 Your thoughts...
-```
+
+From Paula Aoyagui:
+After reading the article, I am reflecting about data-hungry machine learning systems such as LLMs and crowdsource work employed to obtain training data. It is known Mechanical Turk and other crowdsource working platforms offer precarious conditions to workers labelling massive amounts of data. And the challenge of obtaining high quality data from this type of crowdwsourcing is not new, but there are new challenges with the popularization of Large Language Models (LLMs). As multiple articles point, there are concerns that crowdsource workers could be using LLMs to partially (or totally) complete a task on platforms such as Mechanical Turk or Prolific. For example, having ChatGPT open on a separate tab to prompt then copy/paste answers. It makes sense considering LLMs are powerful and fast on Q&A tasks, and the crowdsource compensation model is based on how much a worker can deliver. However, there is a further concern as the training data from crowdsource workers is meant to be human, that is, created by a human. If this human is using an LLM to answer the questions (partially or completely) to generate what is supposed to be human-sourced data, and that training data is then used to further train other models based on what is supposed to be human, chances are we'd be losing sight of what is inherently human data. 
